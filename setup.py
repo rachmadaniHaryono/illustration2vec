@@ -29,6 +29,7 @@ setup(
         "Bug Tracker": "https://github.com/rezoo/illustration2vec/issues",
     },
     long_description=long_description,
+    long_description_content_type='text/markdown',
     zip_safe=True,
     entry_points={'console_scripts': ['i2v = i2v.__main__:cli', ],},
     extras_require={
