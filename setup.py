@@ -7,7 +7,7 @@ with open('README.md') as f:
 
 setup(
     name="illustration2vec",
-    version="0.1.0",
+    version="2.0.1",
     packages=find_packages(),
     install_requires=[
         'chainer>=4.1.0',
