@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 from pprint import pprint
 import hashlib
+import os
+import os.path as op
 import sys
 
-from flask import Flask, __version__ as flask_version
+from flask import Flask, __version__ as flask_version, send_from_directory
 from flask.cli import FlaskGroup
 from flask_admin import Admin
 from PIL import Image
 import click
 
-from . import make_i2v_with_chainer, views
+from . import make_i2v_with_chainer, views, models
 
 
 __version__ = '0.2.1'
@@ -36,11 +38,28 @@ def get_custom_version(ctx, param, value):
 
 def create_app():
     app = Flask(__name__)
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = 'True'
+    app.config['DATABASE_FILE'] = 'i2v.sqlite'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + app.config['DATABASE_FILE']
+    app.config['SECRET_KEY'] = os.getenv('ILLUSTRATION2VEC_SECRET_KEY') or os.urandom(24)
+    # Create directory for file fields to use
+    try:
+        os.mkdir(models.file_path)
+        app.logger.debug('File path created')
+    except OSError:
+        pass
+    # app and db
+    models.db.init_app(app)
+    app.app_context().push()
+    models.db.create_all()
     # other setup
     admin = Admin(
-        app, name='Youtube-beets', template_mode='bootstrap3', url='/',
-        index_view=views.HomeView()
+        app, name='Illustration2Vec', template_mode='bootstrap3',
+        index_view=views.HomeView(url='/')
     )
+    admin.add_view(views.ImageView(models.Image, models.db.session))
+    app.add_url_rule('/file/<filename>', 'file', view_func=lambda filename: send_from_directory(models.file_path, filename))
+    app.logger.debug('file path: {}'.format(models.file_path))
     return app
 
 
@@ -51,7 +70,7 @@ def cli():
 
 
 @cli.command()
-@click.option('--output', default='default')
+@click.option('--output', help='Output format;[default]/pprint', default='default')
 @click.argument('images', nargs=-1)
 def estimate_plausible_tags(images, output='default'):
     """Estimate plausible tags."""
