@@ -1,16 +1,54 @@
 #!/usr/bin/env python
 from pprint import pprint
 import hashlib
+import sys
 
+from flask import Flask, __version__ as flask_version
+from flask.cli import FlaskGroup
+from flask_admin import Admin
 from PIL import Image
 import click
 
-from . import make_i2v_with_chainer
+from . import make_i2v_with_chainer, views
 
-@click.group()
-@click.version_option()
+
+__version__ = '0.2.1'
+
+
+class CustomFlaskGroup(FlaskGroup):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.params[0].help = 'Show the program version'
+        self.params[0].callback = get_custom_version
+
+
+def get_custom_version(ctx, param, value):
+    if not value or ctx.resilient_parsing:
+        return
+    message = 'Illustration2Vec %(app_version)s\nFlask %(version)s\nPython %(python_version)s'
+    click.echo(message % {
+        'app_version': __version__,
+        'version': flask_version,
+        'python_version': sys.version,
+    }, color=ctx.color)
+    ctx.exit()
+
+
+def create_app():
+    app = Flask(__name__)
+    # other setup
+    admin = Admin(
+        app, name='Youtube-beets', template_mode='bootstrap3', url='/',
+        index_view=views.HomeView()
+    )
+    return app
+
+
+@click.group(cls=CustomFlaskGroup, create_app=create_app)
 def cli():
+    """Illustration2Vec."""
     pass
+
 
 @cli.command()
 @click.option('--output', default='default')
