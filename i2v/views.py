@@ -20,10 +20,15 @@ class HomeView(AdminIndexView):
 class ImageView(ModelView):
 
     def _list_thumbnail(view, context, model, name):
+        res_templ = '<a class="btn btn-default" href="{}" role="button">Tag</a>'
+        res = res_templ.format(url_for(
+            '.plausible_tag_view', id=model.id))
+        res += '<br/>'
         if not model.path:
-            return ''
-        return Markup('<img src="%s">' % url_for(
-            'file', filename=form.thumbgen_filename(model.path)))
+            return Markup(res)
+        res += '<img src="%s">' % url_for(
+            'file', filename=form.thumbgen_filename(model.path))
+        return Markup(res)
 
     column_formatters = {
         'path': _list_thumbnail,
