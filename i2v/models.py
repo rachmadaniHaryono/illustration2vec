@@ -78,7 +78,8 @@ class Checksum(Base):
         for nm, list_value in plausible_tags.items():
             if list_value:
                 for tag_value, estimation_value in list_value:
-                    tag_model = get_or_create_tag(value=tag_value, namespace=nm, session=session)
+                    tag_model = get_or_create_tag(
+                        value=str(tag_value), namespace=nm, session=session)[0]
                     e_item = get_or_create(
                         session, PlausibleTagEstimation,
                         checksum=self, tag=tag_model, value=estimation_value)[0]
@@ -86,6 +87,13 @@ class Checksum(Base):
 
     def __repr__(self):
         return '<Checksum {0.id} {0.value}>'.format(self)
+
+    def get_plausible_tags(self):
+        res = {'character': [], 'copyright': [], 'general': [], 'rating': []}
+        for estimation in self.plausible_tag_estimations:
+            res.setdefault(estimation.tag.namespace.value, []).append(
+                (estimation.tag.value, estimation.value))
+        return res
 
 
 class PlausibleTagEstimation(Base):
@@ -102,10 +110,11 @@ class PlausibleTagEstimation(Base):
 
 def get_or_create_tag(value, namespace=None, session=None):
     session = db.session if session is None else session
-    namespace_model = None
+    kwargs = dict(value=value)
     if namespace:
-        namespace_model = get_or_create(session, namespace, value=namespace)[0]
-    model, created = get_or_create(session, Tag, value=value, namespace=namespace_model)
+        namespace_model = get_or_create(session, Namespace, value=namespace)[0]
+        kwargs['namespace'] = namespace_model
+    model, created = get_or_create(session, Tag, **kwargs)
     return model, created
 
 

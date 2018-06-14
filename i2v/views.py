@@ -35,6 +35,7 @@ class ImageView(ModelView):
     }
     can_view_details = True
     create_modal = True
+    form_excluded_columns = ('checksum', 'created_at')
 
     @expose('/plausible-tag')
     def plausible_tag_view(self):
@@ -46,34 +47,17 @@ class ImageView(ModelView):
         if model is None:
             flash(gettext('Record does not exist.'), 'error')
             return redirect(return_url)
-        if False and not model.checksum.plausible_tag_estimations:
+        if not model.checksum.plausible_tag_estimations:
             img = Image.open(model.full_path)
-            #  illust2vec = make_i2v_with_chainer(
-                #  "illust2vec_tag_ver200.caffemodel", "tag_list.json")
-            # res = illust2vec.estimate_plausible_tags([img], threshold=0.5)
+            illust2vec = make_i2v_with_chainer(
+                "illust2vec_tag_ver200.caffemodel", "tag_list.json")
             res = illust2vec.estimate_plausible_tags([img])
             res = res[0]
             tags = model.checksum.update_plausible_tag_estimation(res)
             session = models.db.session
             list(map(session.add, tags))
             session.commit()
-        else:
-            res = [{
-                'character': [],
-                'copyright': [],
-                'general': [
-                    ('1girl', 0.9720268249511719),
-                    ('blue eyes', 0.9339820146560669),
-                    ('blonde hair', 0.8899785876274109),
-                    ('solo', 0.8786220550537109),
-                    ('long hair', 0.832091748714447),
-                    ('hair ornament', 0.39239054918289185)],
-                'rating': [
-                    ('safe', 0.9953395128250122),
-                    ('questionable', 0.003477811813354492),
-                    ('explicit', 0.00037872791290283203)]
-            }]
-            plausible_tags = res[0]
+        plausible_tags = model.checksum.get_plausible_tags()
         return self.render('i2v/image_plausible_tag.html', plausible_tags=plausible_tags, model=model)
 
     def after_model_change(self, form, model, is_created):
