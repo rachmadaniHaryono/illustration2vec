@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 from pprint import pprint
-import hashlib
 import os
 import os.path as op
 import sys
