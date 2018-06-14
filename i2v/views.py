@@ -1,3 +1,7 @@
+import hashlib
+import os
+import shutil
+
 from flask import url_for, request
 from flask_admin import AdminIndexView, expose, BaseView, form
 from flask_admin.contrib.sqla import ModelView
@@ -5,9 +9,14 @@ from flask_admin.helpers import get_redirect_target
 from flask_admin.model.helpers import get_mdict_item_or_list
 from jinja2 import Markup
 from PIL import Image
+from werkzeug import secure_filename
+import structlog
 
 from . import models
 from . import make_i2v_with_chainer
+
+
+logger = structlog.getLogger(__name__)
 
 
 class HomeView(AdminIndexView):
@@ -66,7 +75,33 @@ class ImageView(ModelView):
         return self.render('i2v/image_plausible_tag.html', plausible_tags=plausible_tags, model=model)
 
     def after_model_change(self, form, model, is_created):
+        def get_new_filename(src_filename, no_ext_basename=None, new_basename=None):
+            assert not (no_ext_basename and new_basename)
+            basename = os.path.basename(src_filename)
+            if no_ext_basename:
+                ext = os.path.splitext(basename)[1]
+                new_basename = '{}{}'.format(no_ext_basename, ext)
+            new_full_path = os.path.join(os.path.dirname(src_filename), new_basename)
+            return new_full_path
+
         if is_created:
             session = models.db.session
             model.update_checksum(session)
+            # old path
+            full_path = model.full_path
+            thumbgen_filename = model.thumbgen_filename
+            #
+            model.path = '{}{}'.format(
+                model.checksum.value, os.path.splitext(full_path)[1])
+            shutil.move(full_path, model.full_path)
+            new_thumbgen_filename = model.thumbgen_filename
+            try:
+                shutil.move(
+                    os.path.join(models.file_path, thumbgen_filename),
+                    os.path.join(models.file_path, new_thumbgen_filename))
+                logger.debug('Thumbnail moved.'.format(
+                    src_thumb=thumbgen_filename, dst_thumb=new_thumbgen_filename))
+            except FileNotFoundError as e:
+                logger.debug('Thumbnail not found.'.format(
+                    thumb=thumbgen_filename))
             session.commit()
