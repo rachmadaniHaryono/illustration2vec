@@ -10,6 +10,7 @@ setup(
     version="2.0.1",
     packages=find_packages(),
     install_requires=[
+        'appdirs==1.4.3',
         'arrow>=0.12.1',
         'chainer>=4.1.0',
         'click>=6.7',
@@ -23,6 +24,7 @@ setup(
         'Pillow>=5.1.0',
         'scikit-image>=0.14.0',
         'SQLAlchemy-Utils>=0.33.3',
+        'structlog==18.1.0',
     ],
     author="rezoo",
     author_email="rezoolab@gmail.com",
