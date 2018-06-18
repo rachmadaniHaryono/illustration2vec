@@ -1,6 +1,7 @@
 import hashlib
 import os
 import shutil
+import time
 
 from flask import url_for, request
 from flask_admin import AdminIndexView, expose, BaseView, form
@@ -17,6 +18,7 @@ from . import make_i2v_with_chainer
 
 
 logger = structlog.getLogger(__name__)
+ILLUST2VEC = None
 
 
 class HomeView(AdminIndexView):
@@ -63,8 +65,14 @@ class ImageView(ModelView):
             return redirect(return_url)
         if not model.checksum.plausible_tag_estimations:
             img = Image.open(model.full_path)
-            illust2vec = make_i2v_with_chainer(
+            start_time = time.time()
+            global ILLUST2VEC
+            if not ILLUST2VEC:
+                ILLUST2VEC = make_i2v_with_chainer(
                 "illust2vec_tag_ver200.caffemodel", "tag_list.json")
+            illust2vec = ILLUST2VEC
+            end = time.time()
+            logger.debug('i2v initiated', time=(time.time() - start_time))
             res = illust2vec.estimate_plausible_tags([img])
             res = res[0]
             tags = model.checksum.update_plausible_tag_estimation(res)
