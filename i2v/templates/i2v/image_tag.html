@@ -48,7 +48,7 @@
       {% for tag, tag_confidence in tag_list %}
         <tr>
           <td>{{loop.index}}</td>
-          <td>{{tag}}</td>
+          <td class="tag-{{tag_namespace}}">{{tag}}</td>
           <td>
             <div class="progress">
               <div class="progress-bar" role="progressbar"
@@ -79,6 +79,9 @@
       </div>
     </div>
   </div>
+</div>
+<div>
+  <span class="hidden"><a id="hydrus-link" href="{{url_for('image.plausible_tag_view', id=model.id)}}"></a></span> 
 </div>
 {% endblock %}
 {% block tail_js %}
