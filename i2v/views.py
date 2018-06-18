@@ -130,3 +130,8 @@ class ImageView(ModelView):
                 logger.debug('Thumbnail not found.'.format(
                     thumb=thumbgen_filename))
             session.commit()
+
+
+class ChecksumView(ModelView):
+
+    edit_modal = True
