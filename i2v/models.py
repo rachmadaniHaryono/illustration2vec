@@ -116,6 +116,13 @@ class TagEstimation(Base):
     value = db.Column(db.Float)
     mode = db.Column(ChoiceType(MODES))
 
+    def __repr__(self):
+        templ = \
+            '<TagEstimation {0.id} mode:{0.mode.value} {0.tag.fullname} confidence:{1}>'
+        return templ.format(
+            self, '{0:.2f}'.format(self.value * 100)
+        )
+
 
 def get_or_create_tag(value, namespace=None, session=None):
     session = db.session if session is None else session
@@ -133,6 +140,14 @@ class Tag(Base):
     namespace = db.relationship(
         'Namespace', foreign_keys='Tag.namespace_id', lazy='subquery',
         backref=db.backref('tags', lazy=True))
+
+    @property
+    def fullname(self):
+        res = ''
+        if self.namespace:
+            res = self.namespace.value + ':'
+        res += self.value
+        return res
 
 
 class Namespace(Base):
