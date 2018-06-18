@@ -4,6 +4,26 @@
 {% endblock %}
 {% block body %}
 <div>
+  <form action="{{url_for('.create_view', url=url_for('.plausible_tag_view'))}}"
+    method="POST" role="form" class="admin-form form-horizontal" enctype="multipart/form-data">
+    <div class="form-group">
+      <label for="path" class="col-md-2 control-label">Image
+          &nbsp;
+      </label>
+      <div class="col-md-10">
+        <input class="form-control" id="path" name="path" type="file">
+      </div>
+    </div>
+    <hr>
+    <div class="form-group">
+      <div class="col-md-offset-2 col-md-10 submit-row">
+        <input type="submit" class="btn btn-primary" value="Save">
+          <a href="#" class="btn btn-danger" role="button" data-dismiss="modal">Cancel</a>
+      </div>
+    </div>
+  </form>
+</div>
+<div>
   <ul class="nav nav-tabs">
     <li class="{% if mode=='plausible' %}active{% endif %}">
       <a href="{{url_for('.plausible_tag_view', id=model.id)}}">Plausible Tags</a>
