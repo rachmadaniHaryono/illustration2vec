@@ -148,6 +148,10 @@ shape: (1, 512), dtype: uint8
 
 # Server and hydrus compatibility
 
+This feature is only for python3.
+
+It is tested on python 3.6.5 on ubuntu  18.04.
+
 ``i2v`` can run a local server by doing the following:
 
 - put `illust2vec_tag_ver200.caffemodel` and `tag_list.json` on current working command
