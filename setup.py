@@ -10,6 +10,7 @@ setup(
     version="2.0.1",
     packages=find_packages(),
     install_requires=[
+        'arrow>=0.12.1',
         'chainer>=4.1.0',
         'click>=6.7',
         'Flask-Admin==1.5.1',

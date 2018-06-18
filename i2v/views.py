@@ -11,6 +11,7 @@ from flask_admin.model.helpers import get_mdict_item_or_list
 from jinja2 import Markup
 from PIL import Image
 from werkzeug import secure_filename
+import arrow
 import structlog
 
 from . import models
@@ -47,6 +48,13 @@ class ImageView(ModelView):
     column_formatters = {
         'path': _list_thumbnail,
         'checksum': lambda v, c, m, n: m.checksum.value[:7] if m.checksum else '',
+        'created_at': 
+        lambda v, c, m, n: 
+        Markup('<p data-toggle="tooltip" data-placement="top" '
+        'title="{}">{}</p>'.format(
+            m.created_at,
+            arrow.Arrow.fromdatetime(m.created_at, tzinfo='local').humanize(arrow.now())
+        )),
     }
     form_extra_fields = {
         'path': form.ImageUploadField(
