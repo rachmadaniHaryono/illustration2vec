@@ -3,13 +3,23 @@
 <link rel="shortcut icon" href="#" />
 {% endblock %}
 {% block body %}
+<div>
+  <ul class="nav nav-tabs">
+    <li class="{% if mode=='plausible' %}active{% endif %}">
+      <a href="{{url_for('.plausible_tag_view', id=model.id)}}">Plausible Tags</a>
+    </li>
+    <li class="{% if mode=='top' %}active{% endif %}">
+      <a href="{{url_for('.top_tag_view', id=model.id)}}">Top Tags</a>
+    </li>
+  </ul>
+</div>
 <div class="col-md-6">
   <a href="#" id="pop">
     <img id="imageresource" style="max-width:100%" src="{{url_for('file', filename=model.path)}}"></div>
   </a>
 <div class="col-md-6">
   <table class="table table-condensed">
-    {% for tag_namespace, tag_list in plausible_tags.items() %}
+    {% for tag_namespace, tag_list in estimated_tags.items() %}
       <tr>
         <th>#</th>
         <th>{{tag_namespace|capitalize}} Tag</th>

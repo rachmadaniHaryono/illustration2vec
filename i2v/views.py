@@ -31,9 +31,12 @@ class HomeView(AdminIndexView):
 class ImageView(ModelView):
 
     def _list_thumbnail(view, context, model, name):
-        res_templ = '<a class="btn btn-default" href="{}" role="button">Tag</a>'
+        res_templ = '<a class="btn btn-default" href="{}" role="button">Plausible Tag</a>'
         res = res_templ.format(url_for(
             '.plausible_tag_view', id=model.id))
+        res_templ = '<a class="btn btn-default" href="{}" role="button">Top Tag</a>'
+        res += res_templ.format(url_for(
+            '.top_tag_view', id=model.id))
         res += '<br/>'
         if not model.path:
             return Markup(res)
@@ -55,6 +58,13 @@ class ImageView(ModelView):
 
     @expose('/plausible-tag')
     def plausible_tag_view(self):
+        return self._tag_view_base(mode=models.MODE_PLAUSIBLE_TAG)
+
+    @expose('/top-tag')
+    def top_tag_view(self):
+        return self._tag_view_base(mode=models.MODE_TOP_TAG)
+
+    def _tag_view_base(self, mode):
         return_url = get_redirect_target() or self.get_url('.index_view')
         id = get_mdict_item_or_list(request.args, 'id')
         if id is None:
@@ -63,7 +73,11 @@ class ImageView(ModelView):
         if model is None:
             flash(gettext('Record does not exist.'), 'error')
             return redirect(return_url)
-        if not model.checksum.plausible_tag_estimations:
+        if mode not in [models.MODE_PLAUSIBLE_TAG, models.MODE_TOP_TAG]:
+            flash(gettext('Unknown mode.'), 'error')
+            return redirect(return_url)
+        estimated_tags = model.checksum.get_estimated_tags(mode=mode)
+        if  not any(estimated_tags.values()):
             img = Image.open(model.full_path)
             start_time = time.time()
             global ILLUST2VEC
@@ -73,14 +87,18 @@ class ImageView(ModelView):
             illust2vec = ILLUST2VEC
             end = time.time()
             logger.debug('i2v initiated', time=(time.time() - start_time))
-            res = illust2vec.estimate_plausible_tags([img])
+            if mode == models.MODE_PLAUSIBLE_TAG:
+                res = illust2vec.estimate_plausible_tags([img])
+            else:
+                res = illust2vec.estimate_top_tags([img])
             res = res[0]
-            tags = model.checksum.update_plausible_tag_estimation(res)
             session = models.db.session
+            tags = list(model.checksum.update_tag_estimation(
+                res, mode=mode, session=session))
             list(map(session.add, tags))
             session.commit()
-        plausible_tags = model.checksum.get_plausible_tags()
-        return self.render('i2v/image_plausible_tag.html', plausible_tags=plausible_tags, model=model)
+        estimated_tags = model.checksum.get_estimated_tags(mode=mode)
+        return self.render('i2v/image_tag.html', estimated_tags=estimated_tags, model=model, mode=mode)
 
     def after_model_change(self, form, model, is_created):
         if is_created:
