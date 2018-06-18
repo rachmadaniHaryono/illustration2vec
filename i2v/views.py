@@ -3,8 +3,9 @@ import os
 import shutil
 import time
 
-from flask import url_for, request
+from flask import flash, redirect, request, url_for
 from flask_admin import AdminIndexView, expose, BaseView, form
+from flask_admin.babel import gettext
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.helpers import get_redirect_target
 from flask_admin.model.helpers import get_mdict_item_or_list
@@ -120,16 +121,56 @@ class ImageView(ModelView):
                 model.checksum.value, os.path.splitext(full_path)[1])
             shutil.move(full_path, model.full_path)
             new_thumbgen_filename = model.thumbgen_filename
-            try:
-                shutil.move(
-                    os.path.join(models.file_path, thumbgen_filename),
-                    os.path.join(models.file_path, new_thumbgen_filename))
-                logger.debug('Thumbnail moved.'.format(
-                    src_thumb=thumbgen_filename, dst_thumb=new_thumbgen_filename))
-            except FileNotFoundError as e:
-                logger.debug('Thumbnail not found.'.format(
-                    thumb=thumbgen_filename))
+            if thumbgen_filename != new_thumbgen_filename:
+                try:
+                    shutil.move(
+                        os.path.join(models.file_path, thumbgen_filename),
+                        os.path.join(models.file_path, new_thumbgen_filename))
+                    logger.debug('Thumbnail moved.'.format(
+                        src_thumb=thumbgen_filename, dst_thumb=new_thumbgen_filename))
+                except FileNotFoundError as e:
+                    logger.debug('Thumbnail not found.'.format(
+                        thumb=thumbgen_filename))
             session.commit()
+
+    @expose('/new/', methods=('GET', 'POST'))
+    def create_view(self):
+        res = super().create_view()
+        if get_redirect_target() == url_for('image.plausible_tag_view') and \
+                request.method == 'POST':
+            form = self.create_form()
+            if self.validate_form(form):
+                model = self.create_model(form)
+                return redirect(url_for('image.plausible_tag_view', id=model.id))
+        return res
+
+    def create_model(self, form):
+        """
+            Create model from form.
+
+            :param form:
+                Form instance
+        """
+        try:
+            model = self.model()
+            form.populate_obj(model)
+            checksum = models.sha256_checksum(model.full_path)
+            checksum_m = models.get_or_create(self.session, models.Checksum, value=checksum)[0]
+            instance = self.session.query(self.model).filter_by(checksum=checksum_m).first()
+            if instance:
+                model = instance
+            self.session.add(model)
+            self._on_model_change(form, model, True)
+            self.session.commit()
+        except Exception as ex:
+            if not self.handle_view_exception(ex):
+                flash(gettext('Failed to create record. %(error)s', error=str(ex)), 'error')
+                logger.exception('Failed to create record.')
+            self.session.rollback()
+            return False
+        else:
+            self.after_model_change(form, model, True)
+        return model
 
 
 class ChecksumView(ModelView):
