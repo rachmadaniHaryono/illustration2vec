@@ -10,8 +10,10 @@ from flask_admin import form
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.event import listens_for
 from sqlalchemy.types import TIMESTAMP
+from sqlalchemy_utils.types.choice import ChoiceType
 
-
+MODE_PLAUSIBLE_TAG = 'plausible'
+MODE_TOP_TAG = 'top'
 db = SQLAlchemy()
 file_path = op.join(user_data_dir('Illustration2Vec', 'Masaki Saito'), 'files')
 
@@ -73,39 +75,46 @@ def del_image(mapper, connection, target):
 class Checksum(Base):
     value = db.Column(db.String, unique=True)
 
-    def update_plausible_tag_estimation(self, plausible_tags, session=None):
+    def update_tag_estimation(self, tags, mode=MODE_PLAUSIBLE_TAG, session=None):
         session = db.session if session is None else session
-        for nm, list_value in plausible_tags.items():
+        for nm, list_value in tags.items():
             if list_value:
                 for tag_value, estimation_value in list_value:
                     tag_model = get_or_create_tag(
                         value=str(tag_value), namespace=nm, session=session)[0]
                     e_item = get_or_create(
-                        session, PlausibleTagEstimation,
-                        checksum=self, tag=tag_model, value=estimation_value)[0]
+                        session, TagEstimation,
+                        checksum=self, tag=tag_model, mode=mode)[0]
+                    e_item.value = estimation_value
                     yield e_item
 
     def __repr__(self):
         return '<Checksum {0.id} {0.value}>'.format(self)
 
-    def get_plausible_tags(self):
+    def get_estimated_tags(self, mode=MODE_PLAUSIBLE_TAG):
         res = {'character': [], 'copyright': [], 'general': [], 'rating': []}
-        for estimation in self.plausible_tag_estimations:
-            res.setdefault(estimation.tag.namespace.value, []).append(
-                (estimation.tag.value, estimation.value))
+        for estimation in self.tag_estimations:
+            if estimation.mode == mode:
+                res.setdefault(estimation.tag.namespace.value, []).append(
+                    (estimation.tag.value, estimation.value))
         return res
 
 
-class PlausibleTagEstimation(Base):
+class TagEstimation(Base):
+    MODES = [
+        (MODE_PLAUSIBLE_TAG, MODE_PLAUSIBLE_TAG),
+        (MODE_TOP_TAG, MODE_TOP_TAG),
+    ]
     checksum_id = db.Column(db.Integer, db.ForeignKey('checksum.id'))
     checksum = db.relationship(
-        'Checksum', foreign_keys='PlausibleTagEstimation.checksum_id', lazy='subquery',
-        backref=db.backref('plausible_tag_estimations', lazy=True))
+        'Checksum', foreign_keys='TagEstimation.checksum_id', lazy='subquery',
+        backref=db.backref('tag_estimations', lazy=True))
     tag_id = db.Column(db.Integer, db.ForeignKey('tag.id'))
     tag = db.relationship(
-        'Tag', foreign_keys='PlausibleTagEstimation.tag_id', lazy='subquery',
-        backref=db.backref('plausible_tag_estimations', lazy=True))
+        'Tag', foreign_keys='TagEstimation.tag_id', lazy='subquery',
+        backref=db.backref('tag_estimations', lazy=True))
     value = db.Column(db.Float)
+    mode = db.Column(ChoiceType(MODES))
 
 
 def get_or_create_tag(value, namespace=None, session=None):

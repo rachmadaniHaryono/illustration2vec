@@ -21,6 +21,7 @@ setup(
         'numpy>=1.14.3',
         'Pillow>=5.1.0',
         'scikit-image>=0.14.0',
+        'SQLAlchemy-Utils>=0.33.3',
     ],
     author="rezoo",
     author_email="rezoolab@gmail.com",
