@@ -146,6 +146,21 @@ shape: (1, 512), dtype: uint8
    42 181  38 254 177 232 150  99]]
 ```
 
+# Server and hydrus compatibility
+
+``i2v`` can run a local server by doing the following:
+
+- put `illust2vec_tag_ver200.caffemodel` and `tag_list.json` on current working command
+- to run on on `127.0.0.1` host and port `5011` run following command:
+```shell
+  $ i2v run -h 127.0.0.1 -p 5011
+```
+
+Hydrus can use that as parsing by importing following config:
+```json
+[32, "illustration2vec", 2, ["http://127.0.0.1:5011/image/new/?url=%2Fimage%2Fplausible-tag", 1, 0, [55, 1, [[], "some hash bytes"]], "path", {}, [[29, 1, ["match parser", [27, 6, [[26, 1, [[62, 2, [0, "a", {"id": "hydrus-link"}, null, null, false, [51, 1, [3, "", null, null, "example string"]]]]]], 0, "href", [51, 1, [3, "", null, null, "example string"]], [55, 1, [[], "parsed information"]]]], [[30, 3, ["", 0, [27, 6, [[26, 1, [[62, 2, [0, "td", {"class": "tag-creator"}, null, null, false, [51, 1, [3, "", null, null, "example string"]]]]]], 1, "", [51, 1, [3, "", null, null, "example string"]], [55, 1, [[], "parsed information"]]]], "creator"]], [30, 3, ["", 0, [27, 6, [[26, 1, [[62, 2, [0, "td", {"class": "tag-copyright"}, null, null, false, [51, 1, [3, "", null, null, "example string"]]]]]], 1, "", [51, 1, [3, "", null, null, "example string"]], [55, 1, [[], "parsed information"]]]], "series"]], [30, 3, ["", 0, [27, 6, [[26, 1, [[62, 2, [0, "td", {"class": "tag-character"}, null, null, false, [51, 1, [3, "", null, null, "example string"]]]]]], 1, "", [51, 1, [3, "", null, null, "example string"]], [55, 1, [[], "parsed information"]]]], "character"]], [30, 3, ["", 0, [27, 6, [[26, 1, [[62, 2, [0, "td", {"class": "tag-general"}, null, null, false, [51, 1, [3, "", null, null, "example string"]]]]]], 1, "", [51, 1, [3, "", null, null, "example string"]], [55, 1, [[], "parsed information"]]]], ""]]]]]]]]
+```
+
 # License
 The pre-trained models and the other files we have provided are licensed
 under the MIT License.
