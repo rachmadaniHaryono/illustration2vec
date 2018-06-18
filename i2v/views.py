@@ -75,15 +75,6 @@ class ImageView(ModelView):
         return self.render('i2v/image_plausible_tag.html', plausible_tags=plausible_tags, model=model)
 
     def after_model_change(self, form, model, is_created):
-        def get_new_filename(src_filename, no_ext_basename=None, new_basename=None):
-            assert not (no_ext_basename and new_basename)
-            basename = os.path.basename(src_filename)
-            if no_ext_basename:
-                ext = os.path.splitext(basename)[1]
-                new_basename = '{}{}'.format(no_ext_basename, ext)
-            new_full_path = os.path.join(os.path.dirname(src_filename), new_basename)
-            return new_full_path
-
         if is_created:
             session = models.db.session
             model.update_checksum(session)
