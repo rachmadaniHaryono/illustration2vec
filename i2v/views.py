@@ -6,7 +6,7 @@ import time
 from flask import flash, redirect, request, url_for
 from flask_admin import AdminIndexView, expose, BaseView, form
 from flask_admin.babel import gettext
-from flask_admin.contrib.sqla import ModelView
+from flask_admin.contrib.sqla import ModelView, filters
 from flask_admin.helpers import get_redirect_target
 from flask_admin.model.helpers import get_mdict_item_or_list
 from jinja2 import Markup
@@ -21,6 +21,17 @@ from . import make_i2v_with_chainer
 
 logger = structlog.getLogger(__name__)
 ILLUST2VEC = None
+
+
+class ChecksumView(ModelView):
+
+    edit_modal = True
+    column_formatters = {
+        'value': lambda v, c, m, n: Markup('<a href="{}">{}</a>'.format(
+            url_for('tagestimation.index_view', flt4_checksum_value_equals=getattr(m, n)),
+            getattr(m, n)
+        ))
+    }
 
 
 class HomeView(AdminIndexView):
@@ -173,6 +184,35 @@ class ImageView(ModelView):
         return model
 
 
-class ChecksumView(ModelView):
+class TagEstimationModeFilter(filters.BaseSQLAFilter):
 
-    edit_modal = True
+    def apply(self, query, value, alias=None):
+        res =  query.filter(self.column.mode == value)
+        return res
+
+    def operation(self):
+        return 'equal'
+
+
+class TagEstimationView(ModelView):
+
+    column_formatters = {
+        'checksum': lambda v, c, m, n: getattr(m, n).value[:7],
+        'created_at': 
+        lambda v, c, m, n: 
+        Markup('<p data-toggle="tooltip" data-placement="top" '
+        'title="{}">{}</p>'.format(
+            m.created_at,
+            arrow.Arrow.fromdatetime(m.created_at, tzinfo='local').humanize(arrow.now())
+        )),
+        'mode': lambda v, c, m, n: getattr(m, n).code,
+        'tag': lambda v, c, m, n: getattr(m, n).fullname,
+        'value': lambda v, c, m, n: '{0:0.2f}'.format(getattr(m, n) * 100),
+    }
+    column_filters = (
+        'checksum', 'tag', 'value', 
+        TagEstimationModeFilter(models.TagEstimation, 'mode', options=models.TagEstimation.MODES)
+    )
+    column_list = ('created_at', 'checksum', 'mode', 'tag', 'value')
+    form_excluded_columns = ('created_at', )
+    named_filter_urls = True
