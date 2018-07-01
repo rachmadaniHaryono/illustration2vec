@@ -44,6 +44,7 @@
         <th>#</th>
         <th>{{tag_namespace|capitalize}} Tag</th>
         <th>Confidence</th>
+        <!-- <th>Confirm</th> -->
       </tr>
       {% for tag, tag_confidence in tag_list %}
         <tr>
@@ -57,6 +58,24 @@
                 {{'%0.1f' | format(tag_confidence*100)}}
               </div>
             </div>
+          </td>
+          <td>
+            <!-- <form> -->
+              <!-- <fieldset> -->
+                <!-- <label for="valid">  -->
+                  <!-- <input type="radio" value="valid" name="status"> -->
+                  <!-- <span class="glyphicon glyphicon-ok-sign" aria-hidden="true"></span> -->
+                <!-- </label> -->
+                <!-- <label for="invalid">  -->
+                  <!-- <input type="radio" value="invalid" name="status"> -->
+                  <!-- <span class="glyphicon glyphicon-remove-sign" aria-hidden="true"></span> -->
+                <!-- </label> -->
+                <!-- <label for="invalid"> -->
+                  <!-- <input type="radio" value="unknown" name="status" checked> -->
+                  <!-- <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span> -->
+                <!-- </label> -->
+              <!-- </fieldset> -->
+            <!-- </form> -->
           </td>
         </tr> 
       {% endfor %}
