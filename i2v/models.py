@@ -149,6 +149,9 @@ class Tag(Base):
         res += self.value
         return res
 
+    def __repr__(self):
+        return '<Tag {0.id} {0.fullname}>'.format(self)
+
 
 class Namespace(Base):
     value = db.Column(db.String, unique=True)

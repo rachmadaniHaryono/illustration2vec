@@ -58,6 +58,7 @@ def create_app():
     )
     admin.add_view(views.ImageView(models.Image, models.db.session))
     admin.add_view(views.ChecksumView(models.Checksum, models.db.session))
+    admin.add_view(views.TagEstimationView(models.TagEstimation, models.db.session))
     app.add_url_rule('/file/<filename>', 'file', view_func=lambda filename: send_from_directory(models.file_path, filename))
     app.logger.debug('file path: {}'.format(models.file_path))
     return app
