@@ -57,6 +57,14 @@ class ImageView(ModelView):
             'file', filename=form.thumbgen_filename(model.path))
         return Markup(res)
 
+    can_view_details = True
+    column_default_sort = ('created_at', True)
+    create_modal = True
+    form_excluded_columns = ('checksum', 'created_at')
+    form_extra_fields = {
+        'path': form.ImageUploadField(
+            'Image', base_path=models.file_path, thumbnail_size=(100, 100, True))
+    }
     column_formatters = {
         'path': _list_thumbnail,
         'checksum': lambda v, c, m, n: m.checksum.value[:7] if m.checksum else '',
@@ -68,13 +76,6 @@ class ImageView(ModelView):
             arrow.Arrow.fromdatetime(m.created_at, tzinfo='local').humanize(arrow.now())
         )),
     }
-    form_extra_fields = {
-        'path': form.ImageUploadField(
-            'Image', base_path=models.file_path, thumbnail_size=(100, 100, True))
-    }
-    can_view_details = True
-    create_modal = True
-    form_excluded_columns = ('checksum', 'created_at')
 
     @expose('/plausible-tag')
     def plausible_tag_view(self):
