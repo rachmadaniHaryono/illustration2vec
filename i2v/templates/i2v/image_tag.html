@@ -49,7 +49,7 @@
       {% for tag, tag_confidence in tag_list %}
         <tr>
           <td>{{loop.index}}</td>
-          <td class="tag-{{tag_namespace}}">{{tag}}</td>
+          <td class="tag-{{tag_namespace}}" data-index="{{loop.index}}">{{tag}}</td>
           <td>
             <div class="progress">
               <div class="progress-bar" role="progressbar"
