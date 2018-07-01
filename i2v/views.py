@@ -25,13 +25,15 @@ ILLUST2VEC = None
 
 class ChecksumView(ModelView):
 
-    edit_modal = True
+    #  can_export = True
     column_formatters = {
         'value': lambda v, c, m, n: Markup('<a href="{}">{}</a>'.format(
             url_for('tagestimation.index_view', flt4_checksum_value_equals=getattr(m, n)),
             getattr(m, n)
         ))
     }
+    edit_modal = True
+    #  export_types = ['json']
 
 
 class HomeView(AdminIndexView):
