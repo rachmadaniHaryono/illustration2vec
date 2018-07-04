@@ -5,12 +5,14 @@ import os.path as op
 import sys
 
 from flask import Flask, __version__ as flask_version, send_from_directory
+from flask_restful_swagger import swagger
 from flask.cli import FlaskGroup
 from flask_admin import Admin
+from flask_restful import Api
 from PIL import Image
 import click
 
-from . import make_i2v_with_chainer, views, models
+from . import make_i2v_with_chainer, views, models, resources
 
 
 __version__ = '0.2.1'
@@ -52,6 +54,10 @@ def create_app():
     app.app_context().push()
     models.db.create_all()
     # other setup
+    # api
+    api = swagger.docs(Api(app), apiVersion='0.1')
+    api.add_resource(resources.Checksum, '/checksum')
+    # admin
     admin = Admin(
         app, name='Illustration2Vec', template_mode='bootstrap3',
         index_view=views.HomeView(url='/')

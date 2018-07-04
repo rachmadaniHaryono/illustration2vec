@@ -16,6 +16,8 @@ setup(
         'click>=6.7',
         'Flask-Admin==1.5.1',
         'Flask-Migrate==2.1.1',
+        'flask-restful-swagger>=0.20.1',
+        'Flask-RESTful>=0.3.6',
         'flask-shell-ipython==0.3.0',
         'Flask-SQLAlchemy==2.3.2',
         'Flask-WTF==0.14.2',
