@@ -105,8 +105,10 @@ class ImageView(ModelView):
             start_time = time.time()
             global ILLUST2VEC
             if not ILLUST2VEC:
-                ILLUST2VEC = make_i2v_with_chainer(
-                "illust2vec_tag_ver200.caffemodel", "tag_list.json")
+                model_path = os.getenv('ILLUSTRATION2VEC_MODEL')
+                if not model_path:
+                    model_path =  "illust2vec_tag_ver200.caffemodel"
+                ILLUST2VEC = make_i2v_with_chainer(model_path, "tag_list.json")
             illust2vec = ILLUST2VEC
             end = time.time()
             logger.debug('i2v initiated', time=(time.time() - start_time))
