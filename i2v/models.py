@@ -72,6 +72,18 @@ def del_image(mapper, connection, target):
             pass
 
 
+class ChecksumTag(Base):
+    checksum_id = db.Column(db.Integer, db.ForeignKey('checksum.id'))
+    checksum = db.relationship(
+        'Checksum', foreign_keys='ChecksumTag.checksum_id', lazy='subquery',
+        backref=db.backref('checksum_tags', lazy=True, cascade='delete'))
+    tag_id = db.Column(db.Integer, db.ForeignKey('tag.id'))
+    tag = db.relationship(
+        'Tag', foreign_keys='ChecksumTag.tag_id', lazy='subquery',
+        backref=db.backref('checksum_tags', lazy=True, cascade='delete'))
+    status = db.Column(db.Boolean, default=True)
+
+
 class Checksum(Base):
     value = db.Column(db.String, unique=True)
 
