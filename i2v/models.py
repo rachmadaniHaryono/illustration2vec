@@ -14,6 +14,7 @@ from sqlalchemy_utils.types.choice import ChoiceType
 
 MODE_PLAUSIBLE_TAG = 'plausible'
 MODE_TOP_TAG = 'top'
+MODE_ALL_TAG = 'all'
 db = SQLAlchemy()
 file_path = op.join(user_data_dir('Illustration2Vec', 'Masaki Saito'), 'files')
 
@@ -116,11 +117,12 @@ class TagEstimation(Base):
     MODES = [
         (MODE_PLAUSIBLE_TAG, MODE_PLAUSIBLE_TAG),
         (MODE_TOP_TAG, MODE_TOP_TAG),
+        (MODE_ALL_TAG, MODE_ALL_TAG),
     ]
     checksum_id = db.Column(db.Integer, db.ForeignKey('checksum.id'))
     checksum = db.relationship(
         'Checksum', foreign_keys='TagEstimation.checksum_id', lazy='subquery',
-        backref=db.backref('tag_estimations', lazy=True))
+        backref=db.backref('tag_estimations', lazy=True, cascade='delete'))
     tag_id = db.Column(db.Integer, db.ForeignKey('tag.id'))
     tag = db.relationship(
         'Tag', foreign_keys='TagEstimation.tag_id', lazy='subquery',

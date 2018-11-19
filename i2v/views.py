@@ -92,6 +92,10 @@ class ImageView(ModelView):
     def top_tag_view(self):
         return self._tag_view_base(mode=models.MODE_TOP_TAG)
 
+    @expose('/all-tag')
+    def all_tag_view(self):
+        return self._tag_view_base(mode=models.MODE_ALL_TAG)
+
     def _tag_view_base(self, mode):
         return_url = get_redirect_target() or self.get_url('.index_view')
         id = get_mdict_item_or_list(request.args, 'id')
@@ -101,7 +105,8 @@ class ImageView(ModelView):
         if model is None:
             flash(gettext('Record does not exist.'), 'error')
             return redirect(return_url)
-        if mode not in [models.MODE_PLAUSIBLE_TAG, models.MODE_TOP_TAG]:
+        valid_mode = [models.MODE_PLAUSIBLE_TAG, models.MODE_TOP_TAG, models.MODE_ALL_TAG]
+        if mode not in valid_mode:
             flash(gettext('Unknown mode.'), 'error')
             return redirect(return_url)
         estimated_tags = model.checksum.get_estimated_tags(mode=mode)
@@ -119,8 +124,25 @@ class ImageView(ModelView):
             logger.debug('i2v initiated', time=(time.time() - start_time))
             if mode == models.MODE_PLAUSIBLE_TAG:
                 res = illust2vec.estimate_plausible_tags([img])
-            else:
+            elif mode == models.MODE_TOP_TAG:
                 res = illust2vec.estimate_top_tags([img])
+            elif mode == models.MODE_ALL_TAG:
+                res1 = illust2vec.estimate_plausible_tags([img])
+                res2 = illust2vec.estimate_top_tags([img])
+                res = {k: dict(v) for k, v in res1[0].items()}
+                for main_key, item in res2[0].items():
+                    dict_item = dict(item)
+                    for key, value in dict_item.items():
+                        if key in res[main_key]:
+                            res[main_key][key] = (value + res[main_key][key])/2
+                        else:
+                            res[main_key][key] = value
+                for main_key, item in res.items():
+                    res[main_key] = [(k, v) for k, v in item.items()]
+                res = [res]
+            else:
+                flash(gettext('Unknown mode.'), 'error')
+                return redirect(return_url)
             res = res[0]
             session = models.db.session
             tags = list(model.checksum.update_tag_estimation(
@@ -208,7 +230,7 @@ class TagEstimationView(ModelView):
 
     column_default_sort = ('created_at', True)
     column_formatters = {
-        'checksum': lambda v, c, m, n: getattr(m, n).value[:7],
+        'checksum': lambda v, c, m, n: getattr(m, n).value[:7] if hasattr(getattr(m,n), 'value') else 'None',
         'created_at': 
         lambda v, c, m, n: 
         Markup('<p data-toggle="tooltip" data-placement="top" '
@@ -227,3 +249,4 @@ class TagEstimationView(ModelView):
     column_list = ('created_at', 'checksum', 'mode', 'tag', 'value')
     form_excluded_columns = ('created_at', )
     named_filter_urls = True
+    page_size = 100

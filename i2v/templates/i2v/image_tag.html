@@ -31,6 +31,9 @@
     <li class="{% if mode=='top' %}active{% endif %}">
       <a href="{{url_for('.top_tag_view', id=model.id)}}">Top Tags</a>
     </li>
+    <li class="{% if mode=='all' %}active{% endif %}">
+      <a href="{{url_for('.all_tag_view', id=model.id)}}">All Tags</a>
+    </li>
   </ul>
 </div>
 <div class="col-md-6">
