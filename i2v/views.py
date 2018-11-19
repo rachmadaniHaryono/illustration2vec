@@ -26,9 +26,17 @@ ILLUST2VEC = None
 class ChecksumView(ModelView):
 
     #  can_export = True
+    column_default_sort = ('created_at', True)
     column_formatters = {
-        'value': lambda v, c, m, n: Markup('<a href="{}">{}</a>'.format(
+        'created_at': 
+        lambda v, c, m, n: 
+        Markup('<p data-toggle="tooltip" data-placement="top" title="{}">{}</p>'.format(
+            m.created_at,
+            arrow.Arrow.fromdatetime(m.created_at, tzinfo='local').humanize(arrow.now())
+        )),
+        'value': lambda v, c, m, n: Markup('<a href="{}">{}</a> {}'.format(
             url_for('tagestimation.index_view', flt4_checksum_value_equals=getattr(m, n)),
+            '(tag estimation)',
             getattr(m, n)
         ))
     }
@@ -46,21 +54,19 @@ class HomeView(AdminIndexView):
 class ImageView(ModelView):
 
     def _list_thumbnail(view, context, model, name):
-        res_templ = '<a class="btn btn-default" href="{}" role="button">Plausible Tag</a>'
-        res = res_templ.format(url_for(
-            '.plausible_tag_view', id=model.id))
-        res_templ = '<a class="btn btn-default" href="{}" role="button">Top Tag</a>'
-        res += res_templ.format(url_for(
-            '.top_tag_view', id=model.id))
-        res += '<br/>'
-        if not model.path:
-            return Markup(res)
-        res += '<img src="%s">' % url_for(
-            'file', filename=form.thumbgen_filename(model.path))
+        btn_templ = '<a class="btn btn-default" href="{}" role="button">{}</a>'
+        pt_button =  btn_templ.format(url_for('.plausible_tag_view', id=model.id), 'Plausible Tag')
+        tt_button =  btn_templ.format(url_for( '.top_tag_view', id=model.id), 'Top Tag')
+        img_figure = '<figure><img src="{}"><figcaption>{}</figcaption></figure>'.format(
+            url_for('file', filename=form.thumbgen_filename(model.path)),
+            model.checksum.value[:7]
+        )
+        res = '<div>{}</div><div>{}{}</div>'.format(img_figure, pt_button, tt_button)
         return Markup(res)
 
-    can_view_details = True
+    can_edit = False
     column_default_sort = ('created_at', True)
+    column_exclude_list = ('checksum', )
     create_modal = True
     form_excluded_columns = ('checksum', 'created_at')
     form_extra_fields = {
@@ -69,7 +75,6 @@ class ImageView(ModelView):
     }
     column_formatters = {
         'path': _list_thumbnail,
-        'checksum': lambda v, c, m, n: m.checksum.value[:7] if m.checksum else '',
         'created_at': 
         lambda v, c, m, n: 
         Markup('<p data-toggle="tooltip" data-placement="top" '
@@ -201,6 +206,7 @@ class TagEstimationModeFilter(filters.BaseSQLAFilter):
 
 class TagEstimationView(ModelView):
 
+    column_default_sort = ('created_at', True)
     column_formatters = {
         'checksum': lambda v, c, m, n: getattr(m, n).value[:7],
         'created_at': 
