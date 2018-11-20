@@ -57,6 +57,8 @@ def create_app():
     # api
     api = swagger.docs(Api(app), apiVersion='0.1')
     api.add_resource(resources.Checksum, '/api/checksum/<int:c_id>')
+    api.add_resource(resources.ChecksumTag, '/api/checksum/<int:c_id>/tag/<int:t_id>')
+    api.add_resource(resources.ChecksumTagList, '/api/checksum/<int:c_id>/tag')
     # admin
     admin = Admin(
         app, name='Illustration2Vec', template_mode='bootstrap3',

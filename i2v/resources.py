@@ -5,7 +5,6 @@ from flask_restful_swagger import swagger
 from . import models
 
 
-# You may decorate your operation with @swagger.operation
 class Checksum(Resource):
     "Checksum"
     @swagger.operation(
@@ -43,4 +42,98 @@ class Checksum(Resource):
                     'confidence': x.value,
                 } for x in item.tag_estimations
             ],
+        }
+
+
+class ChecksumTag(Resource):
+    "Checksum"
+    @swagger.operation(
+        notes='Checksum api',
+        responseClass='checksum',
+        nickname='checksum',
+        parameters=[
+            {
+              "name": "c_id",
+              "description": "Checksum id",
+              "required": False,
+              "allowMultiple": False,
+              "dataType": 'int',
+              "paramType": "path"
+            },
+            {
+              "name": "t_id",
+              "description": "Tag id",
+              "required": False,
+              "allowMultiple": False,
+              "dataType": 'int',
+              "paramType": "path"
+            },
+          ],
+        responseMessages=[
+            { "code": 201, "message": "Success" },
+            { "code": 405, "message": "Invalid input" },
+            { "code": 404, "message": "Item doesn't exist" },
+          ]
+        )
+    def get(self, c_id, t_id):
+        session = models.db.session
+        item = session.query(models.Checksum).filter_by(id=c_id).first()
+        if not item:
+            abort(404, message="Checksum {} doesn't exist".format(c_id))
+        tags = {}
+        for est_item in item.tag_estimations:
+            if est_item.tag_id == t_id:
+                tags.setdefault(est_item.tag.fullname, []).append(
+                    {'mode': est_item.mode.value, 'confidence': est_item.value}
+                )
+        tags = [v for _, v in tags.items()]
+        tag_item = session.query(models.Tag).filter_by(id=t_id).first()
+        return {
+            'checksum_id': item.id, 'checksum_value': item.value,
+            'tag_id': tag_item.id, 'tag_value': tag_item.fullname,
+            'estimations': tags,
+        }
+
+
+class ChecksumTagList(Resource):
+    "Checksum tag list."
+    @swagger.operation(
+        notes='Checksum api',
+        responseClass='checksum',
+        nickname='checksum',
+        parameters=[
+            {
+              "name": "c_id",
+              "description": "Checksum id",
+              "required": False,
+              "allowMultiple": False,
+              "dataType": 'int',
+              "paramType": "path"
+            },
+          ],
+        responseMessages=[
+            { "code": 201, "message": "Success" },
+            { "code": 405, "message": "Invalid input" },
+            { "code": 404, "message": "Item doesn't exist" },
+          ]
+        )
+    def get(self, c_id):
+        session = models.db.session
+        item = session.query(models.Checksum).filter_by(id=c_id).first()
+        if not item:
+            abort(404, message="Checksum {} doesn't exist".format(c_id))
+        tags = {}
+        tag_id_name = {}
+        for est_item in item.tag_estimations:
+            tag_id_name[est_item.tag.fullname] = est_item.tag.id
+            tags.setdefault(est_item.tag.fullname, []).append(
+                {'mode': est_item.mode.value, 'confidence': est_item.value}
+            )
+        tags = [
+            {'tag_value': k, 'tag_id': tag_id_name[k], 'estimations': v}
+            for k, v in tags.items()
+        ]
+        return {
+            'checksum_id': item.id, 'checksum_value': item.value,
+            'tags': tags,
         }
