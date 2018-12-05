@@ -14,7 +14,7 @@ setup(
         'arrow>=0.12.1',
         'chainer>=4.1.0',
         'click>=6.7',
-        'Flask-Admin==1.5.1',
+        'Flask-Admin>=1.5.2',
         'Flask-Migrate==2.1.1',
         'flask-restful-swagger>=0.20.1',
         'Flask-RESTful>=0.3.6',
