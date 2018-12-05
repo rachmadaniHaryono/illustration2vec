@@ -23,6 +23,24 @@ logger = structlog.getLogger(__name__)
 ILLUST2VEC = None
 
 
+class ImageUploadField(form.ImageUploadField):
+
+    def _save_image(self, image, path, format='JPEG'):
+        if image.mode not in ('RGB', 'RGBA'):
+            image = image.convert('RGBA')
+
+        try:
+            with open(path, 'wb') as fp:
+                image.save(fp, format)
+        except OSError as err:
+            if str(err) == 'cannot write mode RGBA as JPEG':
+                image = image.convert('RGB')
+                with open(path, 'wb') as fp:
+                    image.save(fp, format)
+            else:
+                raise err
+
+
 class ChecksumView(ModelView):
 
     #  can_export = True
@@ -70,7 +88,7 @@ class ImageView(ModelView):
     create_modal = True
     form_excluded_columns = ('checksum', 'created_at')
     form_extra_fields = {
-        'path': form.ImageUploadField(
+        'path': ImageUploadField(
             'Image', base_path=models.file_path, thumbnail_size=(100, 100, True))
     }
     column_formatters = {
