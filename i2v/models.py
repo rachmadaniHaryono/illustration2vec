@@ -17,6 +17,14 @@ MODE_TOP_TAG = 'top'
 MODE_ALL_TAG = 'all'
 db = SQLAlchemy()
 file_path = op.join(user_data_dir('Illustration2Vec', 'Masaki Saito'), 'files')
+checksum_tags = db.Table('checksum_tags',
+    db.Column('checksum_id', db.Integer, db.ForeignKey('checksum.id'), primary_key=True),
+    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'), primary_key=True)
+)
+checksum_invalid_tags = db.Table('checksum_invalid_tags',
+    db.Column('checksum_id', db.Integer, db.ForeignKey('checksum.id'), primary_key=True),
+    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'), primary_key=True)
+)
 
 
 class Base(db.Model):
@@ -73,20 +81,14 @@ def del_image(mapper, connection, target):
             pass
 
 
-class ChecksumTag(Base):
-    checksum_id = db.Column(db.Integer, db.ForeignKey('checksum.id'))
-    checksum = db.relationship(
-        'Checksum', foreign_keys='ChecksumTag.checksum_id', lazy='subquery',
-        backref=db.backref('checksum_tags', lazy=True, cascade='delete'))
-    tag_id = db.Column(db.Integer, db.ForeignKey('tag.id'))
-    tag = db.relationship(
-        'Tag', foreign_keys='ChecksumTag.tag_id', lazy='subquery',
-        backref=db.backref('checksum_tags', lazy=True, cascade='delete'))
-    status = db.Column(db.Boolean, default=True)
-
-
 class Checksum(Base):
     value = db.Column(db.String, unique=True)
+    tags = db.relationship(
+        'Tag', secondary=checksum_tags,
+        lazy='subquery', backref=db.backref('checksums', lazy=True))
+    invalid_tags = db.relationship(
+        'Tag', secondary=checksum_invalid_tags,
+        lazy='subquery', backref=db.backref('invalid_checksums', lazy=True))
 
     def update_tag_estimation(self, tags, mode=MODE_PLAUSIBLE_TAG, session=None):
         session = db.session if session is None else session
