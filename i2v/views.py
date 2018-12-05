@@ -29,16 +29,15 @@ class ImageUploadField(form.ImageUploadField):
         if image.mode not in ('RGB', 'RGBA'):
             image = image.convert('RGBA')
 
-        try:
-            with open(path, 'wb') as fp:
+        with open(path, 'wb') as fp:
+            try:
                 image.save(fp, format)
-        except OSError as err:
-            if str(err) == 'cannot write mode RGBA as JPEG':
-                image = image.convert('RGB')
-                with open(path, 'wb') as fp:
+            except OSError as err:
+                if str(err) == 'cannot write mode RGBA as JPEG':
+                    image = image.convert('RGB')
                     image.save(fp, format)
-            else:
-                raise err
+                else:
+                    raise err
 
 
 class ChecksumView(ModelView):
