@@ -49,7 +49,7 @@
         <th>Confidence</th>
         <th>Confirm</th>
       </tr>
-      {% for tag, tag_confidence, tag_id in tag_list %}
+      {% for tag, tag_confidence, tag_id, status in tag_list %}
         <tr>
           <td>{{loop.index}}</td>
           <td class="tag-{{tag_namespace}}" data-index="{{loop.index}}">{{tag}}</td>
@@ -66,15 +66,18 @@
             <form>
               <fieldset>
                 <label for="valid">
-                  <input type="radio" value="valid" name="status" data-tag_id="{{tag_id}}">
+                  <input type="radio" value="valid" name="status" data-tag_id="{{tag_id}}"
+                    {% if status == 'valid' %} checked {% endif %}>
                   <span class="glyphicon glyphicon-ok-sign" aria-hidden="true"></span>
                 </label>
                 <label for="unknown">
-                  <input type="radio" value="unknown" name="status" data-tag_id="{{tag_id}}" checked>
+                  <input type="radio" value="unknown" name="status" data-tag_id="{{tag_id}}" 
+                    {% if status == 'unknown' %} checked {% endif %}>
                   <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
                 </label>
                 <label for="invalid">
-                  <input type="radio" value="invalid" name="status" data-tag_id="{{tag_id}}">
+                  <input type="radio" value="invalid" name="status" data-tag_id="{{tag_id}}"
+                    {% if status == 'invalid' %} checked {% endif %}>
                   <span class="glyphicon glyphicon-remove-sign" aria-hidden="true"></span>
                 </label>
               </fieldset>
@@ -116,12 +119,17 @@
   $('input[name=status]').on('click', function(e){ 
        console.log(this.value);
       var tag_id = this.dataset["tag_id"]
+      var valid_tag_url = '{{request.url_root}}api/checksum/' + '{{model.checksum.id}}' + '/tag/' + tag_id
+      var invalid_tag_url = '{{request.url_root}}api/checksum/' + '{{model.checksum.id}}' + '/invalid_tag/' + tag_id
     if (this.value === 'valid'){
-        console.log('{{request.url_root}}api/checksum/' + '{{model.checksum.id}}' + '/tag/' + tag_id);
+        $.post(valid_tag_url)
+        $.ajax({type:"DELETE", url: invalid_tag_url})
     } else if (this.value === 'invalid'){
-        console.log('{{request.url_root}}api/checksum/' + '{{model.checksum.id}}' + '/invalid_tag/' + tag_id);
+        $.post(invalid_tag_url)
+        $.ajax({type:"DELETE", url: invalid_tag_url})
     } else if (this.value === 'unknown'){
-        console.log('{{request.url_root}}api/checksum/' + '{{model.checksum.id}}' + '/tag/' + tag_id);
+        $.ajax({type:"DELETE", url: invalid_tag_url})
+        $.ajax({type:"DELETE", url: valid_tag_url})
     } else {
       console.log('unknown value: ' + this.value)
     }
