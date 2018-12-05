@@ -40,6 +40,7 @@ class Checksum(Resource):
                     'mode': x.mode.value,
                     'tag': x.tag.fullname,
                     'confidence': x.value,
+                    'tag_id': x.tag.id,
                 } for x in item.tag_estimations
             ],
         }
@@ -92,6 +93,61 @@ class ChecksumTag(Resource):
             'checksum_id': item.id, 'checksum_value': item.value,
             'tag_id': tag_item.id, 'tag_value': tag_item.fullname,
             'estimations': tags,
+        }
+
+    @swagger.operation(
+        notes='Checksum api',
+        responseClass='checksum',
+        nickname='checksum',
+        parameters=[
+            {
+              "name": "c_id",
+              "description": "Checksum id",
+              "required": False,
+              "allowMultiple": False,
+              "dataType": 'int',
+              "paramType": "path"
+            },
+            {
+              "name": "t_id",
+              "description": "Tag id",
+              "required": False,
+              "allowMultiple": False,
+              "dataType": 'int',
+              "paramType": "path"
+            },
+          ],
+        responseMessages=[
+            { "code": 201, "message": "Success" },
+            { "code": 405, "message": "Invalid input" },
+            { "code": 404, "message": "Item doesn't exist" },
+          ]
+        )
+    def post(self, c_id, t_id):
+        session = models.db.session
+        item = session.query(models.Checksum).filter_by(id=c_id).first()
+        if not item:
+            abort(404, message="Checksum {} doesn't exist".format(c_id))
+        tag_item = session.query(models.Tag).filter_by(id=t_id).first()
+        if not tag_item:
+            abort(404, message="Tag {} doesn't exist".format(c_id))
+        item.tags.append(tag_item)
+        if tag_item in item.invalid_tags:
+            item.invalid_tags.remove(tag_item)
+        session.add(item)
+        session.commit()
+        tag_estimations = {}
+        for est_item in item.tag_estimations:
+            if est_item.tag_id == t_id:
+                tag_estimations.setdefault(est_item.tag.fullname, []).append(
+                    {'mode': est_item.mode.value, 'confidence': est_item.value}
+                )
+        tag_estimations = [v for _, v in tag_estimations.items()][0]
+        return {
+            'checksum_id': item.id, 'checksum_value': item.value,
+            'tag_id': tag_item.id, 'tag_value': tag_item.fullname,
+            'estimations': tag_estimations,
+            'status': 'valid'
         }
 
 
