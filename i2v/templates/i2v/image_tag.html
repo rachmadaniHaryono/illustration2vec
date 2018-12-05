@@ -47,9 +47,9 @@
         <th>#</th>
         <th>{{tag_namespace|capitalize}} Tag</th>
         <th>Confidence</th>
-        <!-- <th>Confirm</th> -->
+        <th>Confirm</th>
       </tr>
-      {% for tag, tag_confidence in tag_list %}
+      {% for tag, tag_confidence, tag_id in tag_list %}
         <tr>
           <td>{{loop.index}}</td>
           <td class="tag-{{tag_namespace}}" data-index="{{loop.index}}">{{tag}}</td>
@@ -63,22 +63,22 @@
             </div>
           </td>
           <td>
-            <!-- <form> -->
-              <!-- <fieldset> -->
-                <!-- <label for="valid">  -->
-                  <!-- <input type="radio" value="valid" name="status"> -->
-                  <!-- <span class="glyphicon glyphicon-ok-sign" aria-hidden="true"></span> -->
-                <!-- </label> -->
-                <!-- <label for="invalid">  -->
-                  <!-- <input type="radio" value="invalid" name="status"> -->
-                  <!-- <span class="glyphicon glyphicon-remove-sign" aria-hidden="true"></span> -->
-                <!-- </label> -->
-                <!-- <label for="invalid"> -->
-                  <!-- <input type="radio" value="unknown" name="status" checked> -->
-                  <!-- <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span> -->
-                <!-- </label> -->
-              <!-- </fieldset> -->
-            <!-- </form> -->
+            <form>
+              <fieldset>
+                <label for="valid">
+                  <input type="radio" value="valid" name="status" data-tag_id="{{tag_id}}">
+                  <span class="glyphicon glyphicon-ok-sign" aria-hidden="true"></span>
+                </label>
+                <label for="unknown">
+                  <input type="radio" value="unknown" name="status" data-tag_id="{{tag_id}}" checked>
+                  <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
+                </label>
+                <label for="invalid">
+                  <input type="radio" value="invalid" name="status" data-tag_id="{{tag_id}}">
+                  <span class="glyphicon glyphicon-remove-sign" aria-hidden="true"></span>
+                </label>
+              </fieldset>
+            </form>
           </td>
         </tr> 
       {% endfor %}
@@ -112,6 +112,19 @@
   $("#pop").on("click", function() {
      $('#imagepreview').attr('src', $('#imageresource').attr('src')); // here asign the image to the modal when the user click the enlarge link
      $('#imagemodal').modal('show'); // imagemodal is the id attribute assigned to the bootstrap modal, then i use the show function
+  });
+  $('input[name=status]').on('click', function(e){ 
+       console.log(this.value);
+      var tag_id = this.dataset["tag_id"]
+    if (this.value === 'valid'){
+        console.log('{{request.url_root}}api/checksum/' + '{{model.checksum.id}}' + '/tag/' + tag_id);
+    } else if (this.value === 'invalid'){
+        console.log('{{request.url_root}}api/checksum/' + '{{model.checksum.id}}' + '/invalid_tag/' + tag_id);
+    } else if (this.value === 'unknown'){
+        console.log('{{request.url_root}}api/checksum/' + '{{model.checksum.id}}' + '/tag/' + tag_id);
+    } else {
+      console.log('unknown value: ' + this.value)
+    }
   });
 </script>
 {% endblock %}

@@ -111,7 +111,7 @@ class Checksum(Base):
         for estimation in self.tag_estimations:
             if estimation.mode == mode:
                 res.setdefault(estimation.tag.namespace.value, []).append(
-                    (estimation.tag.value, estimation.value))
+                    (estimation.tag.value, estimation.value, estimation.tag.id))
         return res
 
 
