@@ -47,7 +47,7 @@
         <th>#</th>
         <th>{{tag_namespace|capitalize}} Tag</th>
         <th>Confidence</th>
-        <th>Confirm</th>
+        <th style="text-align:center">Confirmation</th>
       </tr>
       {% for tag, tag_confidence, tag_id, status in tag_list %}
         <tr>
@@ -62,7 +62,7 @@
               </div>
             </div>
           </td>
-          <td>
+          <td align="center">
             <form>
               <fieldset>
                 <label for="valid">
