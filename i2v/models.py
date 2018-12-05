@@ -110,8 +110,14 @@ class Checksum(Base):
         res = {'character': [], 'copyright': [], 'general': [], 'rating': []}
         for estimation in self.tag_estimations:
             if estimation.mode == mode:
+                if estimation.tag in self.tags:
+                    status = 'valid'
+                elif estimation.tag in self.invalid_tags:
+                    status = 'invalid'
+                else:
+                    status = 'unknown'
                 res.setdefault(estimation.tag.namespace.value, []).append(
-                    (estimation.tag.value, estimation.value, estimation.tag.id))
+                    (estimation.tag.value, estimation.value, estimation.tag.id, status))
         return res
 
 
